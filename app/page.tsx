@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Container from "@/components/layout/Container";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
