@@ -97,7 +97,7 @@ export default function Home() {
     <Container className="py-6">
       <div className="flex w-full">
         <main
-          className={`transition-all duration-300 ${
+          className={`transition-all duration-300 w-full ${
             isSidebarOpen ? "xl:w-3/4" : "w-full"
           }`}
         >
