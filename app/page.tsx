@@ -80,19 +80,6 @@ export default function Home() {
     setSelectedGenre(genre);
   };
 
-  // Filter bands by genre and search
-  const filteredBands = useMemo(() => {
-    return bands.filter((band) => {
-      const matchesGenre =
-        selectedGenre === "All" ||
-        band.genre?.toLowerCase() === selectedGenre.toLowerCase();
-      const matchesSearch = band.band_name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return matchesGenre && matchesSearch;
-    });
-  }, [bands, selectedGenre, searchQuery]);
-
   return (
     <Container className="py-6">
       <div className="flex w-full">
@@ -116,16 +103,27 @@ export default function Home() {
             <div className="bg-surface rounded-[10px] p-6 mt-6">{error}</div>
           )}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {filteredBands.map((band) => (
-              <Card
-                key={band.id}
-                image={`/sources/im${band.id}.png`}
-                title={band.band_name}
-                subtitle={band.album}
-                description={band.description}
-                onErrorImage="/sources/default.png"
-              />
-            ))}
+            {bands.map((band) => {
+              // Filter bands by genre and search
+              const matchesGenre =
+                selectedGenre === "All" ||
+                band.genre?.toLowerCase() === selectedGenre.toLowerCase();
+              const matchesSearch = band.band_name
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase());
+              const shouldShow = matchesGenre && matchesSearch;
+              return (
+                <div key={band.id} className={shouldShow ? "block" : "hidden"}>
+                  <Card
+                    image={`/sources/im${band.id}.png`}
+                    title={band.band_name}
+                    subtitle={band.album}
+                    description={band.description}
+                    onErrorImage="/sources/default.png"
+                  />
+                </div>
+              );
+            })}
           </section>
         </main>
 
