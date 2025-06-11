@@ -53,7 +53,7 @@ export default function Header({
             : "lg:flex lg:flex-row lg:items-center lg:gap-5 xl:gap-14 xl:mb-0"
         }`}
       >
-        <div className="flex gap-[10px] flex-wrap">
+        <div className="flex gap-[10px] flex-wrap justify-center">
           {["All", "Country", "Rock", "Pop"].map((label) => {
             const isSelected = selectedGenre === label;
             return (
