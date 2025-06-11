@@ -22,7 +22,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <p className="mb-[15px]">
           We’re thrilled to have you join us on this musical journey! Lyric
           Music is your gateway to a fresh and immersive way to enjoy the bands
-          and artists you love. Whether you're searching for your all-time
+          and artists you love. Whether you&apos;re searching for your all-time
           favorite tracks, exploring curated playlists crafted to fit every
           mood, or discovering new songs that will soon become your go-to
           anthems, Lyric Music is here to elevate your listening experience.
