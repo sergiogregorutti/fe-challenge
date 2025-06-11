@@ -1,103 +1,136 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import Container from "@/components/layout/Container";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
+import Card from "@/components/ui/Card";
+
+type Band = {
+  id: string;
+  band_name: string;
+  album: string;
+  description: string;
+  genre?: string;
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // State to control whether the sidebar is open
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // State to store the list of bands
+  const [bands, setBands] = useState<Band[]>([]);
+  // State to show error message in UI if fetch fails
+  const [error, setError] = useState<string | null>(null);
+  // State to show loading indicator
+  const [loading, setLoading] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  // Stage for search and genre filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("All");
+
+  // Fallback text for Bands description
+  const bandDescriptionFallbackText =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate ve";
+
+  useEffect(() => {
+    // Initial fetch to get the base band list
+    fetch("/data/bands.json")
+      .then((res) => res.json())
+      .then(async (data) => {
+        // Fetch specific description for each band
+        const enriched = await Promise.all(
+          data.map(async (band: Omit<Band, "description">) => {
+            try {
+              const res = await fetch(`/data/${band.id}.json`);
+              if (!res.ok) throw new Error("Not found");
+              const bandData = await res.json();
+              return {
+                ...band,
+                description:
+                  bandData.description || bandDescriptionFallbackText,
+              };
+            } catch {
+              return {
+                ...band,
+                description: bandDescriptionFallbackText,
+              };
+            }
+          })
+        );
+        setBands(enriched);
+        setLoading(false);
+      })
+      .catch((err) => {
+        // Log fetch error and display error message in UI
+        console.error("Error fetching bands:", err);
+        setError(
+          "An error occurred while loading the data. Please try again later."
+        );
+        setLoading(false);
+      });
+  }, []);
+
+  // Function to update search query
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // Function to update selected genre
+  const handleGenreSelect = (genre: string) => {
+    setSelectedGenre(genre);
+  };
+
+  // Filter bands by genre and search
+  const filteredBands = useMemo(() => {
+    return bands.filter((band) => {
+      const matchesGenre =
+        selectedGenre === "All" ||
+        band.genre?.toLowerCase() === selectedGenre.toLowerCase();
+      const matchesSearch = band.band_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesGenre && matchesSearch;
+    });
+  }, [bands, selectedGenre, searchQuery]);
+
+  return (
+    <Container className="py-6">
+      <div className="flex w-full">
+        <main
+          className={`transition-all duration-300 ${
+            isSidebarOpen ? "xl:w-3/4" : "w-full"
+          }`}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          <Header
+            onSearchChange={handleSearchChange}
+            onGenreSelect={handleGenreSelect}
+            selectedGenre={selectedGenre}
+            isSidebarOpen={isSidebarOpen}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          {/* Display loading message while fetching data */}
+          {loading && (
+            <div className="bg-surface rounded-[10px] p-6 mt-6">Loading...</div>
+          )}
+          {/* Display error message if there was a problem loading the bands data */}
+          {error && (
+            <div className="bg-surface rounded-[10px] p-6 mt-6">{error}</div>
+          )}
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {filteredBands.map((band) => (
+              <Card
+                key={band.id}
+                image={`/sources/im${band.id}.png`}
+                title={band.band_name}
+                subtitle={band.album}
+                description={band.description}
+                onErrorImage="/sources/default.png"
+              />
+            ))}
+          </section>
+        </main>
+
+        {isSidebarOpen && <Sidebar onClose={() => setIsSidebarOpen(false)} />}
+      </div>
+    </Container>
   );
 }
