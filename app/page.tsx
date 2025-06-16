@@ -80,6 +80,14 @@ export default function Home() {
     setSelectedGenre(genre);
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedGenre]);
+
   return (
     <Container className="py-6">
       <div className="flex w-full">
@@ -103,17 +111,22 @@ export default function Home() {
             <div className="bg-surface rounded-[10px] p-6 mt-6">{error}</div>
           )}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {bands.map((band) => {
-              // Filter bands by genre and search
-              const matchesGenre =
-                selectedGenre === "All" ||
-                band.genre?.toLowerCase() === selectedGenre.toLowerCase();
-              const matchesSearch = band.band_name
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
-              const shouldShow = matchesGenre && matchesSearch;
-              return (
-                <div key={band.id} className={shouldShow ? "block" : "hidden"}>
+            {bands
+              .filter((band) => {
+                const matchesGenre =
+                  selectedGenre === "All" ||
+                  band.genre?.toLowerCase() === selectedGenre.toLowerCase();
+                const matchesSearch = band.band_name
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase());
+                return matchesGenre && matchesSearch;
+              })
+              .slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              )
+              .map((band) => (
+                <div key={band.id}>
                   <Card
                     image={`/sources/im${band.id}.png`}
                     title={band.band_name}
@@ -122,9 +135,35 @@ export default function Home() {
                     onErrorImage="/sources/default.png"
                   />
                 </div>
-              );
-            })}
+              ))}
           </section>
+          <div className="flex justify-center mt-8 gap-2">
+            {Array.from({
+              length: Math.ceil(
+                bands.filter((band) => {
+                  const matchesGenre =
+                    selectedGenre === "All" ||
+                    band.genre?.toLowerCase() === selectedGenre.toLowerCase();
+                  const matchesSearch = band.band_name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase());
+                  return matchesGenre && matchesSearch;
+                }).length / itemsPerPage
+              ),
+            }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-4 py-2 rounded ${
+                  currentPage === i + 1
+                    ? "bg-primary text-white"
+                    : "bg-gray-200 cursor-pointer"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
         </main>
 
         {isSidebarOpen && <Sidebar onClose={() => setIsSidebarOpen(false)} />}
